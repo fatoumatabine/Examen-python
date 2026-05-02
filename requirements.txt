@@ -5,3 +5,4 @@ flask-jwt-extended
 python-dotenv
 cloudinary
 flasgger
+psycopg2-binary
