@@ -2,6 +2,7 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_jwt_extended import JWTManager
+from flasgger import Swagger
 from app.config import Config
 
 db = SQLAlchemy()
@@ -11,6 +12,9 @@ jwt = JWTManager()
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+
+    # Swagger config - charge automatiquement swagger.yml à la racine
+    swagger = Swagger(app)
 
     db.init_app(app)
     bcrypt.init_app(app)

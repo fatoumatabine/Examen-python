@@ -1,0 +1,610 @@
+openapi: 3.0.0
+info:
+  title: API Gestion Approvisionnements
+  description: API RESTful pour gérer les fournisseurs, produits et approvisionnements d'une boutique. Authentification JWT requise.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:5001
+    description: Serveur de développement
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  responses:
+    Unauthorized:
+      description: Token manquant ou invalide
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Acces refuse. Token manquant."
+    BadRequest:
+      description: Données invalides
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+
+paths:
+  /api/health:
+    get:
+      summary: Santé de l'API
+      tags: [Général]
+      responses:
+        '200':
+          description: API opérationnelle
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /api/auth/register:
+    post:
+      summary: Inscription utilisateur
+      tags: [Authentification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, email, password]
+              properties:
+                nom:
+                  type: string
+                  example: "Ahmed Diop"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmed@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "secret123"
+      responses:
+        '201':
+          description: Utilisateur créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Utilisateur cree avec succes"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/auth/login:
+    post:
+      summary: Connexion utilisateur
+      tags: [Authentification]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Connexion réussie, retourne un token JWT
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                      nom:
+                        type: string
+                      email:
+                        type: string
+        '401':
+          description: Identifiants invalides
+
+  /api/auth/me:
+    get:
+      summary: Infos utilisateur connecté
+      tags: [Authentification]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Infos de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: object
+
+  /api/fournisseurs:
+    get:
+      summary: Liste tous les fournisseurs
+      tags: [Fournisseurs]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des fournisseurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    nom:
+                      type: string
+                    telephone:
+                      type: string
+                    adresse:
+                      type: string
+
+    post:
+      summary: Créer un fournisseur
+      tags: [Fournisseurs]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [nom, telephone, adresse]
+              properties:
+                nom:
+                  type: string
+                  example: "ABC Distribution"
+                telephone:
+                  type: string
+                  example: "771234567"
+                adresse:
+                  type: string
+                  example: "Dakar, Sénégal"
+      responses:
+        '201':
+          description: Fournisseur créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+
+  /api/fournisseurs/{id}:
+    get:
+      summary: Récupérer un fournisseur par ID
+      tags: [Fournisseurs]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détails du fournisseur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  nom:
+                    type: string
+                  telephone:
+                    type: string
+                  adresse:
+                    type: string
+        '404':
+          description: Fournisseur non trouvé
+
+    put:
+      summary: Modifier un fournisseur
+      tags: [Fournisseurs]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nom:
+                  type: string
+                telephone:
+                  type: string
+                adresse:
+                  type: string
+      responses:
+        '200':
+          description: Fournisseur mis à jour
+
+    delete:
+      summary: Supprimer un fournisseur
+      tags: [Fournisseurs]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Fournisseur supprimé
+
+  /api/produits:
+    get:
+      summary: Liste tous les produits
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des produits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    libelle:
+                      type: string
+                    prixUnitaire:
+                      type: number
+                      format: float
+                    quantiteEnStock:
+                      type: integer
+                    imageUrl:
+                      type: string
+                      format: uri
+                    imagePublicId:
+                      type: string
+
+    post:
+      summary: Créer un produit (sans image)
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [libelle, prixUnitaire]
+              properties:
+                libelle:
+                  type: string
+                  example: "Ordinateur portable"
+                prixUnitaire:
+                  type: number
+                  example: 450000
+      responses:
+        '201':
+          description: Produit créé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+
+  /api/produits/{id}:
+    get:
+      summary: Récupérer un produit par ID
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Détails du produit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  libelle:
+                    type: string
+                  prixUnitaire:
+                    type: number
+                  quantiteEnStock:
+                    type: integer
+                  imageUrl:
+                    type: string
+                    format: uri
+                  imagePublicId:
+                    type: string
+
+    put:
+      summary: Modifier un produit
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                libelle:
+                  type: string
+                prixUnitaire:
+                  type: number
+      responses:
+        '200':
+          description: Produit mis à jour
+
+    delete:
+      summary: Supprimer un produit
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Produit supprimé
+
+  /api/produits/{id}/image:
+    post:
+      summary: Uploader une image pour un produit
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Fichier image (png, jpg, etc.)
+      responses:
+        '200':
+          description: Image uploadée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  imageUrl:
+                    type: string
+                    format: uri
+                  imagePublicId:
+                    type: string
+        '400':
+          description: Aucune image fournie
+
+  /api/produits/{id}/increment:
+    patch:
+      summary: Incrémenter le stock d'un produit
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantite]
+              properties:
+                quantite:
+                  type: integer
+                  minimum: 1
+                  example: 10
+      responses:
+        '200':
+          description: Stock incrémenté
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  nouveauStock:
+                    type: integer
+        '400':
+          description: Quantité invalide
+
+  /api/produits/{id}/decrement:
+    patch:
+      summary: Décrémenter le stock d'un produit
+      tags: [Produits]
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantite]
+              properties:
+                quantite:
+                  type: integer
+                  minimum: 1
+                  example: 5
+      responses:
+        '200':
+          description: Stock décrémenté
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  nouveauStock:
+                    type: integer
+        '400':
+          description: Stock insuffisant
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  stockActuel:
+                    type: integer
+
+  /api/approvisionnements:
+    get:
+      summary: Liste tous les approvisionnements
+      tags: [Approvisionnements]
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des approvisionnements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    date:
+                      type: string
+                      format: date-time
+                    quantite:
+                      type: integer
+                    fournisseurId:
+                      type: integer
+                    produitId:
+                      type: integer
+
+    post:
+      summary: Créer un approvisionnement (incrémente le stock automatiquement)
+      tags: [Approvisionnements]
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [quantite, fournisseurId, produitId]
+              properties:
+                quantite:
+                  type: integer
+                  example: 20
+                fournisseurId:
+                  type: integer
+                  example: 1
+                produitId:
+                  type: integer
+                  example: 1
+      responses:
+        '201':
+          description: Approvisionnement créé et stock mis à jour
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  id:
+                    type: integer
+        '404':
+          description: Produit non trouvé

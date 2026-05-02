@@ -4,3 +4,4 @@ flask-bcrypt
 flask-jwt-extended
 python-dotenv
 cloudinary
+flasgger

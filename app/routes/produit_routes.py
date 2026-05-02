@@ -100,3 +100,34 @@ def upload_produit_image(id):
         }), 200
     except Exception as e:
         return jsonify({'message': f'Erreur lors du telechargement: {str(e)}'}), 500
+
+@produit_bp.route('/<int:id>/increment', methods=['PATCH'])
+@authenticate
+def increment_stock(id):
+    produit = Produit.query.get_or_404(id)
+    data = request.get_json()
+    quantite = data.get('quantite', 1)
+
+    if quantite <= 0:
+        return jsonify({'message': 'La quantite doit etre positive'}), 400
+
+    produit.quantite_en_stock += quantite
+    db.session.commit()
+    return jsonify({'message': 'Stock incremente', 'nouveauStock': produit.quantite_en_stock}), 200
+
+@produit_bp.route('/<int:id>/decrement', methods=['PATCH'])
+@authenticate
+def decrement_stock(id):
+    produit = Produit.query.get_or_404(id)
+    data = request.get_json()
+    quantite = data.get('quantite', 1)
+
+    if quantite <= 0:
+        return jsonify({'message': 'La quantite doit etre positive'}), 400
+
+    if produit.quantite_en_stock < quantite:
+        return jsonify({'message': 'Stock insuffisant', 'stockActuel': produit.quantite_en_stock}), 400
+
+    produit.quantite_en_stock -= quantite
+    db.session.commit()
+    return jsonify({'message': 'Stock decremente', 'nouveauStock': produit.quantite_en_stock}), 200
